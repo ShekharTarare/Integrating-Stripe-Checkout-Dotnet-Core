@@ -1,0 +1,62 @@
+﻿@page
+@model CheckoutFormModel
+@using StripeCheckoutDemo.Models
+
+<form id="payment-form">
+    <div class="form-group pt-2">
+        <label for="productName">Product Name</label>
+        <input type="text" class="form-control" id="productName" name="productName" placeholder="Enter product name" required>
+    </div>
+    <div class="form-group pt-2">
+        <label for="productDescription">Product Description</label>
+        <input type="text" class="form-control" id="productDescription" name="productDescription" placeholder="Enter product description" required>
+    </div>
+    <div class="form-group pt-2">
+        <label for="amount">Amount (in cents)</label>
+        <input type="number" class="form-control" id="amount" name="amount" placeholder="Enter amount" required>
+    </div>
+    <div class="form-group pt-2">
+        <label for="currency">Currency</label>
+        <select class="form-control" id="currency" name="currency" required>
+            <option value="inr">INR</option>
+            <!-- Add more currencies as needed -->
+        </select>
+    </div>
+    <button type="button" class="btn btn-primary mt-2" id="checkout-button">Checkout</button>
+</form>
+
+@section scripts {
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        var stripe = Stripe('enter_publishable_key');
+
+        document.getElementById('checkout-button').addEventListener('click', function () {
+            fetch('/checkout/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    productName: document.getElementById('productName').value,
+                    productDescription: document.getElementById('productDescription').value,
+                    amount: document.getElementById('amount').value,
+                    currency: document.getElementById('currency').value
+                })
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (session) {
+                    return stripe.redirectToCheckout({ sessionId: session.sessionId });
+                })
+                .then(function (result) {
+                    if (result.error) {
+                        alert(result.error.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+}
